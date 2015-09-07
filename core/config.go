@@ -2,7 +2,6 @@ package core
 
 import (
 	"os"
-	"log"
 	"encoding/json"
 	"errors"
 	"fmt"

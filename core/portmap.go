@@ -4,7 +4,7 @@ import (
 	"net"
 	"fmt"
 	"bufio"
-	"log"
+	log "github.com/Sirupsen/logrus"
 	"io"
 	"strings"
 	"strconv"
@@ -40,6 +40,11 @@ func (r *InteruptedReader) Read(p []byte) (n int, err error) {
 
 type PortNumber uint
 
+type IPNet net.IPNet
+func (ipnet *IPNet) UnmarshalJSON(b []byte) error {
+
+}
+
 type PortMap struct {
 	Port        uint
 	SourceIP    *net.IPNet
@@ -50,6 +55,7 @@ type PortMap struct {
 	listener    net.Listener
 	done        chan struct {}
 }
+
 
 func NewPortMap() *PortMap {
 	portmap := &PortMap{}
