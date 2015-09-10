@@ -31,18 +31,18 @@ func (configWatcher *ConfigWatcher) Watch() {
 				return
 			case event := <-configWatcher.watcher.Events:
 				if event.Op&fsnotify.Write == fsnotify.Write {
-					log.Println("Modified config file: ", event.Name)
+					log.Infoln("Modified config file: ", event.Name)
 					configWatcher.onConfigChange()
 				}
 			case err := <-configWatcher.watcher.Errors:
-				log.Println("Watch config error:", err)
+				log.Errorln("Watch config error:", err)
 			}
 		}
 	}()
 
 	err := configWatcher.watcher.Add(configWatcher.filePath)
 	if err != nil {
-		log.Fatal(err)
+		log.Errorln(err)
 	}
 }
 

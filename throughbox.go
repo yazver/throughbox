@@ -1,17 +1,14 @@
 package main
 
 import (
-	"fmt"
+	//"fmt"
 	"os"
-	"sync"
 	log "github.com/Sirupsen/logrus"
-	"github.com/go-fsnotify/fsnotify"
-	"./core"
-
+	"github.com/yazver/throughbox/core"
 )
 
-var ConfigPath = "./config.json"
-var PortMapList core.PortMapList
+const ConfigPath = "./config.json"
+var throughBox *core.ThroughBox = core.NewThroughBox()
 
 func init() {
 	log.SetLevel(log.InfoLevel)
@@ -19,20 +16,15 @@ func init() {
 
 func main() {
 	log.SetOutput(os.Stderr)
+	log.SetLevel(log.DebugLevel)
 
-	var err error
-	PortMapList, err = core.NewPortMapListFromFile(ConfigPath)
-	if err != nil {
-		log.Fatalln(err.Error())
-		return
-	}
+	throughBox.LoadConfig(ConfigPath, true)
 
-	for _, item := range PortMapList {
-		fmt.Printf("%#v %#v %#v \n", item.Port, *(item.SourceIP), item.DestinationAdress)
-	}
+//	for _, item := range PortMapList {
+//		fmt.Printf("%#v %#v %#v \n", item.Port, *(item.SourceIP), item.DestinationAdress)
+//	}
 
-	log.Debug("Start")
-	wait := &sync.WaitGroup{}
-	PortMapList.Start(wait)
-	wait.Wait()
+	log.Debugln("Start")
+	throughBox.Start()
+	throughBox.Wait()
 }

@@ -2,12 +2,9 @@ package core
 
 import (
 	"sync"
-	"encoding/json"
-	"log"
-	"os"
+	log "github.com/Sirupsen/logrus"
 )
 
-var ThroughBox *ThroughBox = newThroughBox()
 
 type ThroughBox struct {
 	wg            *sync.WaitGroup
@@ -18,8 +15,12 @@ type ThroughBox struct {
 	configWatcher *ConfigWatcher
 }
 
-func newThroughBox() *ThroughBox {
-	return &ThroughBox{&sync.WaitGroup{}, &sync.Mutex{}, PortMapList{}}
+func NewThroughBox() *ThroughBox {
+	return &ThroughBox{&sync.WaitGroup{}, &sync.RWMutex{}, PortMapList{}, "", nil}
+}
+
+func (tb *ThroughBox) Wait() {
+	tb.wg.Wait()
 }
 
 func (tb *ThroughBox) Start() {
@@ -45,10 +46,16 @@ func (tb *ThroughBox) loadConfig() {
 	if config, err := LoadConfig(tb.configPath); err == nil {
 		pmList := NewPortMapList()
 		if err := pmList.InitFromConfig(config); err != nil {
-			log.Fatalln(err.Error())
+			log.Errorln("Can't init PortMapList fron config: " + err.Error())
 		}
 		tb.pmList.Stop()
 		tb.pmList = pmList
+	} else {
+		log.Errorln("Can't load config file: " + err.Error())
+	}
+
+	for _, item := range tb.pmList {
+		log.Debugf("Port map: %s", item)
 	}
 
 }
@@ -61,7 +68,11 @@ func (tb *ThroughBox) LoadConfig(configPath string, watchChanges bool) {
 			tb.configWatcher.Close()
 			tb.configWatcher = nil
 		}
-		tb.configWatcher = NewConfigWatcher(configPath, tb.loadConfig())
+		var err error
+		tb.configWatcher, err = NewConfigWatcher(configPath, tb.loadConfig)
+		if err != nil {
+			log.Errorln(err.Error())
+		}
 	}
 }
 

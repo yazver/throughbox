@@ -1,17 +1,15 @@
 package core
 
 import (
-	"net"
-	"fmt"
-	"bufio"
-	log "github.com/Sirupsen/logrus"
-	"io"
-	"strings"
-	"strconv"
-	"os"
 	"errors"
+	"fmt"
+	"io"
+	"net"
+	"strconv"
+	"strings"
 	"sync"
-	"../debug"
+
+	log "github.com/Sirupsen/logrus"
 )
 
 type ParseError struct {
@@ -24,8 +22,8 @@ func (e *ParseError) Error() string {
 }
 
 type InteruptedReader struct {
-	R    io.Reader        // underlying reader
-	Done <-chan struct {} // max bytes remaining
+	R    io.Reader       // underlying reader
+	Done <-chan struct{} // max bytes remaining
 }
 
 func (r *InteruptedReader) Read(p []byte) (n int, err error) {
@@ -41,21 +39,21 @@ func (r *InteruptedReader) Read(p []byte) (n int, err error) {
 type PortNumber uint
 
 type IPNet net.IPNet
-func (ipnet *IPNet) UnmarshalJSON(b []byte) error {
 
+func (ipnet *IPNet) UnmarshalJSON(b []byte) error {
+	return nil
 }
 
 type PortMap struct {
-	Port        uint
+	Port        int
 	SourceIP    *net.IPNet
 	Destination string
 	ACL         ACLCheck
 
-	locker      *sync.Mutex
-	listener    net.Listener
-	done        chan struct {}
+	locker   *sync.Mutex
+	listener net.Listener
+	done     chan struct{}
 }
-
 
 func NewPortMap() *PortMap {
 	portmap := &PortMap{}
@@ -66,6 +64,14 @@ func NewPortMap() *PortMap {
 //func transferData (conn1, conn2 net.TCPConn) {
 
 //}
+
+func (portmap *PortMap) String() string {
+	sourceIP := "any"
+	if portmap.SourceIP != nil {
+		sourceIP = portmap.SourceIP.String()
+	}
+	return fmt.Sprintf("Port: %d; SourseIP: %s; Destination: %s", portmap.Port, sourceIP, portmap.Destination)
+}
 
 func (portmap *PortMap) Done() {
 	portmap.locker.Lock()
@@ -81,13 +87,13 @@ func (portmap *PortMap) Start(wait *sync.WaitGroup) {
 	defer portmap.locker.Unlock()
 
 	if portmap.listener == nil {
-		listener, err := net.Listen("tcp", ":" + strconv.Itoa(int(portmap.Port)))
+		listener, err := net.Listen("tcp", ":"+strconv.Itoa(int(portmap.Port)))
 		portmap.listener = listener
-		portmap.done = make(chan struct {})
+		portmap.done = make(chan struct{})
 		var wg sync.WaitGroup
 		//defer ln.Close()
 		if err == nil {
-			debug.Printf("net.Listen: %s", listener.Addr())
+			log.Debugf("net.Listen: %s", listener.Addr())
 			wait.Add(1)
 			wg.Add(1)
 			go func() {
@@ -98,28 +104,43 @@ func (portmap *PortMap) Start(wait *sync.WaitGroup) {
 					if err != nil {
 						// handle error
 						return
-						log.Fatal(err)
+						log.Errorln(err)
 					}
 					//Handle connection
-					debug.Printf("listener.Accept(): %s", conn.RemoteAddr()) // debug
-					connOut, err := net.Dial("tcp", portmap.Destination)
-					if err != nil {
-						return
-						log.Fatalln(err)
+					log.Debugf("listener.Accept(): (Remote addr:%s; Local addr: %s)", conn.RemoteAddr(), conn.LocalAddr()) // debug
+					acceptConnection := true
+					if portmap.SourceIP != nil {
+						//						if TCPConn, ok := conn.(*net.TCPConn); ok {
+						if TCPAddr, ok := conn.RemoteAddr().(*net.TCPAddr); ok {
+							acceptConnection = portmap.SourceIP.Contains(TCPAddr.IP)
+							//log.Debugf("acceptConnection: %v; IP: %#v; Mask: %#v", acceptConnection, TCPAddr.IP, portmap.SourceIP)
+						} else {
+							acceptConnection = false
+						}
 					}
-					debug.Printf("net.Dial(): %s", connOut.RemoteAddr()) // debug
-					go func(conn1, conn2 net.Conn) {
-						defer conn.Close()
-						defer connOut.Close()
-						io.Copy(conn1, &InteruptedReader{conn2, portmap.done})
-						debug.Printf("Close connections: %s, %s", conn1.RemoteAddr(), conn2.RemoteAddr())
-					}(conn, connOut)
-					go func(conn1, conn2 net.Conn) {
-						defer conn.Close()
-						defer connOut.Close()
-						io.Copy(conn1, &InteruptedReader{conn2, portmap.done})
-						debug.Printf("Close connections: %s, %s", conn1.RemoteAddr(), conn2.RemoteAddr())
-					}(connOut, conn)
+					if acceptConnection {
+						connOut, err := net.Dial("tcp", portmap.Destination)
+						if err != nil {
+							return
+							log.Errorln(err)
+						}
+						log.Debugf("net.Dial(): %s", connOut.RemoteAddr()) // debug
+						go func(conn1, conn2 net.Conn) {
+							defer conn.Close()
+							defer connOut.Close()
+							io.Copy(conn1, &InteruptedReader{conn2, portmap.done})
+							log.Debugf("Close connections: %s, %s", conn1.RemoteAddr(), conn2.RemoteAddr())
+						}(conn, connOut)
+						go func(conn1, conn2 net.Conn) {
+							defer conn.Close()
+							defer connOut.Close()
+							io.Copy(conn1, &InteruptedReader{conn2, portmap.done})
+							//log.Debugf("Close connections: %s, %s", conn1.RemoteAddr(), conn2.RemoteAddr())
+						}(connOut, conn)
+					} else {
+						conn.Close()
+						log.Debugf("Reject the connection: %s, %s", conn.RemoteAddr(), conn.LocalAddr())
+					}
 				}
 			}()
 
@@ -130,7 +151,7 @@ func (portmap *PortMap) Start(wait *sync.WaitGroup) {
 				defer portmap.locker.Unlock()
 				listener.Close()
 				portmap.Done()
-				debug.Print("listener.Close()") // debug
+				log.Debugln("listener.Close()") // debug
 			}()
 
 		} else {
@@ -153,60 +174,60 @@ func (portmap *PortMap) Listener() net.Listener {
 	return portmap.listener
 }
 
-func (portmap *PortMap) InitFromStr(str string) (error) {
-	fields := strings.Fields(str)
-	return portmap.InitFromFields(fields)
-}
+//func (portmap *PortMap) InitFromStr(str string) (error) {
+//	fields := strings.Fields(str)
+//	return portmap.InitFromFields(fields)
+//}
 
-func (portmap *PortMap) InitFromFields(fields []string) (error) {
-	if len(fields) >= 4 {
-		if !strings.EqualFold(fields[0], "portmap") {
-			return &ParseError{fields[0], fmt.Sprintf("Tag \"%s\" don't vatid", fields[0])}
-		}
-		port, err := strconv.ParseUint(fields[1], 0, 16)
-		if err != nil {
-			return &ParseError{fields[1], err.Error()}
-		}
-		portmap.Port = PortNumber(port)
-		_, sourseip, err := net.ParseCIDR(fields[2])
-		if err != nil {
-			return &ParseError{fields[2], err.Error()}
-		}
-		portmap.SourceIP = sourseip
-		portmap.Destination = fields[3]
-		if _, err := net.ResolveTCPAddr("tcp", fields[3]); err != nil {
-			return &ParseError{fields[3], err.Error()}
-		}
-		return nil
-	} else {
-		return &ParseError{"", "Can't parse the string"}
-	}
-}
+//func (portmap *PortMap) InitFromFields(fields []string) (error) {
+//	if len(fields) >= 4 {
+//		if !strings.EqualFold(fields[0], "portmap") {
+//			return &ParseError{fields[0], fmt.Sprintf("Tag \"%s\" don't vatid", fields[0])}
+//		}
+//		port, err := strconv.ParseUint(fields[1], 0, 16)
+//		if err != nil {
+//			return &ParseError{fields[1], err.Error()}
+//		}
+//		portmap.Port = port
+//		_, sourseip, err := net.ParseCIDR(fields[2])
+//		if err != nil {
+//			return &ParseError{fields[2], err.Error()}
+//		}
+//		portmap.SourceIP = sourseip
+//		portmap.Destination = fields[3]
+//		if _, err := net.ResolveTCPAddr("tcp", fields[3]); err != nil {
+//			return &ParseError{fields[3], err.Error()}
+//		}
+//		return nil
+//	} else {
+//		return &ParseError{"", "Can't parse the string"}
+//	}
+//}
 
-func (portmap *PortMap) Init(SourceIP string, Port uint, Destination string, ACL string) (error) {
+func (portmap *PortMap) Init(SourceIP string, Port int, Destination string, ACL string) error {
 	if !(Port >= 1 && Port <= 0xFFFF) {
 		return errors.New("Incorrect number of port, must be in range 1-65 535: " + strconv.Itoa(Port))
 	}
 	portmap.Port = Port
 
-	if strings.TrimSpace(SourceIP) != "" {
+	trimmedSourceIP := strings.ToLower(strings.TrimSpace(SourceIP))
+	portmap.SourceIP = nil
+	if !(trimmedSourceIP == "" || trimmedSourceIP == "any") {
 		_, sourceIP, err := net.ParseCIDR(SourceIP)
 		if err != nil {
-			return err.Error()
+			return err
 		}
 		portmap.SourceIP = sourceIP
-	} else {
-		portmap.SourceIP = nil
 	}
 
 	portmap.Destination = Destination
 	if _, err := net.ResolveTCPAddr("tcp", Destination); err != nil {
-		return err.Error()
+		return err
 	}
 	return nil
 }
 
-type PortMapList map[PortNumber]*PortMap
+type PortMapList map[int]*PortMap
 
 func (list PortMapList) Add(portmap *PortMap) {
 	if portmap != nil {
@@ -251,10 +272,10 @@ func (list PortMapList) Add(portmap *PortMap) {
 //	return nil
 //}
 
-func (list PortMapList) InitFromConfig(config *Config) (error) {
+func (list PortMapList) InitFromConfig(config *Config) error {
 	for _, item := range config.PortMap {
 		portmap := NewPortMap()
-		if err := portmap.Init(item.SourceIP, item.Port, item.Destination, item.ACL); err != {
+		if err := portmap.Init(item.SourceIP, item.Port, item.Destination, item.ACL); err != nil {
 			return err
 		}
 		list.Add(portmap)
@@ -278,10 +299,8 @@ func NewPortMapList() PortMapList {
 	return PortMapList{}
 }
 
-
 //func NewPortMapListFromFile(filePath string) (list PortMapList, err error) {
 //	list = NewPortMapList()
 //	err = list.Load(filePath)
 //	return
 //}
-
