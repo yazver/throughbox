@@ -1,7 +1,7 @@
 {
 	"saveLog": true,	
-	"LogDebugInfo": true,
-	"ShowLogInConsole": true,
+	"logDebugInfo": true,
+	"showLogInConsole": true,
 	"portmap": [
 		{"port": 9000, "destination": "habrahabr.ru:80", "sourceIP": "192.168.225.1/24"},
 		{"port": 9001, "destination": "bbc.com:80", "sourceIP": ""},

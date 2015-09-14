@@ -1,23 +1,23 @@
 package core
 
 import (
-	"os"
 	"encoding/json"
 	"errors"
 	"fmt"
+	"os"
 )
 
 type ConfigPortMap struct {
 	SourceIP    string `json:sourceIP` // 192.168.0.100/24
-	Port        int    `json:port`    // 9000
+	Port        int    `json:port`     // 9000
 	Destination string `json:dest`     // bbc.com:80
 	ACL         string `json:acl`
 }
 type Config struct {
-	SaveLog          bool `json:saveLog`
-	LogDebugInfo         bool `json:debugLog`
-	ShowLogInConsole bool `json:showLogInConsole`
-	PortMap          [] ConfigPortMap `json:portmap`
+	SaveLog          bool            `json:saveLog`
+	LogDebugInfo     bool            `json:logDebugInfo`
+	ShowLogInConsole bool            `json:showLogInConsole`
+	PortMap          []ConfigPortMap `json:portmap`
 }
 
 func LoadConfig(filePath string) (*Config, error) {

@@ -1,6 +1,8 @@
 package core
 
 import (
+	"io"
+	"os"
 	"sync"
 	log "github.com/Sirupsen/logrus"
 )
@@ -44,6 +46,23 @@ func (tb *ThroughBox) loadConfig() {
 	defer tb.wg.Done()
 
 	if config, err := LoadConfig(tb.configPath); err == nil {
+		// Init base settings
+		if config.LogDebugInfo {
+			log.SetLevel(log.DebugLevel)
+		} else {
+			log.SetLevel(log.InfoLevel)
+		}
+		if config.SaveLog && config.ShowLogInConsole {
+			log.SetOutput(io.MultiWriter(os.Stderr))
+		} else if config.SaveLog {
+			
+		} else if config.ShowLogInConsole {
+			log.SetOutput(os.Stderr)
+		} else {
+			log.SetOutput(io.MultiWriter())
+		}
+
+		// Init port mapping
 		pmList := NewPortMapList()
 		if err := pmList.InitFromConfig(config); err != nil {
 			log.Errorln("Can't init PortMapList fron config: " + err.Error())
