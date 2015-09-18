@@ -1,4 +1,8 @@
-/.idea
 *.exe
+*.exe~
 *.test
 *~
+.git/
+.settings/
+.idea/
+
