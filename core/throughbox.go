@@ -17,22 +17,34 @@ package main
 import (
 	//"fmt"
 	"os"
+	"flag"
 	log "github.com/Sirupsen/logrus"
-	"github.com/yazver/throughbox/core"
 )
 
-const ConfigPath = "./config.json"
-var throughBox *core.ThroughBox = core.NewThroughBox()
+var throughBox *ThroughBox = NewThroughBox()
 
 func init() {
 	log.SetLevel(log.InfoLevel)
 }
 
 func main() {
+
+	var (
+		configDir string
+		hideConsole bool
+		showConsole bool
+		debugLog bool
+	)
+
+	flag.StringVar(&configDir, "configdir", "", "Configuration directory")
+	flag.BoolVar(&hideConsole, "hidecon", "", "Hide console")
+	flag.BoolVar(&showConsole, "showcon", "", "Show console")
+	flag.BoolVar(&debugLog, "debuglog", "", "Show console")
+
 	log.SetOutput(os.Stderr)
 	log.SetLevel(log.DebugLevel)
 
-	throughBox.LoadConfig(ConfigPath, true)
+	throughBox.LoadConfig(Locations, true)
 
 //	for _, item := range PortMapList {
 //		fmt.Printf("%#v %#v %#v \n", item.Port, *(item.SourceIP), item.DestinationAdress)
