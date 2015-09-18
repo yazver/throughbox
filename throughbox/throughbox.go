@@ -37,9 +37,9 @@ func main() {
 	)
 
 	flag.StringVar(&configDir, "configdir", "", "Configuration directory")
-	flag.BoolVar(&hideConsole, "hidecon", "", "Hide console")
-	flag.BoolVar(&showConsole, "showcon", "", "Show console")
-	flag.BoolVar(&debugLog, "debuglog", "", "Show console")
+	flag.BoolVar(&hideConsole, "hidecon", false, "Hide console")
+	flag.BoolVar(&showConsole, "showcon", false, "Show console")
+	flag.BoolVar(&debugLog, "debuglog", false, "Show console")
 
 	log.SetOutput(os.Stderr)
 	log.SetLevel(log.DebugLevel)
