@@ -16,8 +16,9 @@ package main
 
 import (
 	//"fmt"
-	"os"
 	"flag"
+	"os"
+
 	log "github.com/Sirupsen/logrus"
 )
 
@@ -30,10 +31,10 @@ func init() {
 func main() {
 
 	var (
-		configDir string
+		configDir   string
 		hideConsole bool
 		showConsole bool
-		debugLog bool
+		debugLog    bool
 	)
 
 	flag.StringVar(&configDir, "configdir", "", "Configuration directory")
@@ -44,11 +45,11 @@ func main() {
 	log.SetOutput(os.Stderr)
 	log.SetLevel(log.DebugLevel)
 
-	throughBox.LoadConfig(Locations, true)
+	throughBox.LoadConfig(Locations[LocationConfigFile], true)
 
-//	for _, item := range PortMapList {
-//		fmt.Printf("%#v %#v %#v \n", item.Port, *(item.SourceIP), item.DestinationAdress)
-//	}
+	//	for _, item := range PortMapList {
+	//		fmt.Printf("%#v %#v %#v \n", item.Port, *(item.SourceIP), item.DestinationAdress)
+	//	}
 
 	log.Debugln("Start")
 	throughBox.Start()

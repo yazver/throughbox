@@ -22,10 +22,10 @@ import (
 )
 
 func PathExists(path string) bool {
-	_, err := os.Stat(path) 
+	_, err := os.Stat(path)
 	return err == nil
 }
-		
+
 func getHomeDir() (string, error) {
 	var homeDir string
 
@@ -43,9 +43,9 @@ func getHomeDir() (string, error) {
 	return homeDir, nil
 }
 
-func getHomeSubDir(subDirs ...string) (string, error) { 
+func getHomeSubDir(subDirs ...string) (string, error) {
 	if homeDir, err := getHomeDir(); err == nil {
-		return filepath.Join(homeDir, filepath.Join(subDir)), nil
+		return filepath.Join(homeDir, filepath.Join(subDirs...)), nil
 	} else {
 		return "", err
 	}

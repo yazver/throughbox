@@ -15,39 +15,44 @@
 package main
 
 import (
-	"strings"
 	"path/filepath"
-	"github.com/yazver/throughbox/libs/osutils"
+	"strings"
+
 	log "github.com/Sirupsen/logrus"
+	"github.com/yazver/throughbox/libs/osutils"
 )
 
 const (
 	LocationConfigFile = iota
-	LocationLogFile 	
+	LocationLogFile
 )
 
-var Locations map[int] string = {
-	LocationConfigFile: "${config}/config.json"
-	LocationLogFile: "${config}/throughbox.log"
+var Locations map[int]string
+
+func init() {
+	Locations = map[int]string{
+		LocationConfigFile: "${config}/config.json",
+		LocationLogFile:    "${config}/throughbox.log"}
 }
 
 func formatLocation(location, paramName, param string) string {
-	return filepath.Join(strings.Split(strings.Replace(location, "${" + paramName + "}", param, -1), "/"))
+	return filepath.Join(strings.Split(strings.Replace(location, "${"+paramName+"}", param, -1), "/")...)
 }
 
 func initLocations() {
-	if appConfigDir, err := osutils.GetAppDir(); err != nil {
+	appConfigDir, err := osutils.GetAppDir()
+	if err != nil {
 		log.Warnln("Get application directory: " + err.Error())
 	}
-	if err != nil || !osutils.PathExists(formatLocation(Location[LocationConfigFile], "config", appDir)) {
+	if err != nil || !osutils.PathExists(formatLocation(Locations[LocationConfigFile], "config", appConfigDir)) {
 		if appConfigDir, err = osutils.GetAppConfigDir("throughbox"); err != nil {
-			log.Errorln("Get config directory: " + err.Error())	
+			log.Errorln("Get config directory: " + err.Error())
 		}
 	}
 	if strings.TrimSpace(appConfigDir) == "" {
 		log.Fatalln("The config path is not defined.")
 	}
-	
+
 	for key, location := range Locations {
 		Locations[key] = formatLocation(location, "config", appConfigDir)
 	}
