@@ -1,0 +1,5 @@
+{"portmap": [
+	{"port": 9000, "destination": "habrahabr.ru:80", "sourceIP": "192.168.225.1/24"},
+	{"port": 9001, "destination": "bbc.com:80", "sourceIP": ""},
+	{"port": 9002, "destination": "izgr.ru:80", "sourceIP": ""}
+]}
