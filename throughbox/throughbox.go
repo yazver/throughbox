@@ -42,7 +42,7 @@ func main() {
 	flag.BoolVar(&showConsole, "showcon", false, "Show console")
 	flag.BoolVar(&debugLog, "debuglog", false, "Show console")
 
-	log.SetOutput(os.Stderr)
+	log.SetOutput(os.Stderr) 
 	log.SetLevel(log.DebugLevel)
 
 	throughBox.LoadConfig(Locations[LocationConfigFile], true)
