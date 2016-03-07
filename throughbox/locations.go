@@ -39,7 +39,7 @@ func formatLocation(location, paramName, param string) string {
 	return filepath.Join(strings.Split(strings.Replace(location, "${"+paramName+"}", param, -1), "/")...)
 }
 
-func initLocations() {
+func InitLocations() {
 	appConfigDir, err := osutils.GetAppDir()
 	if err != nil {
 		log.Warnln("Get application directory: " + err.Error())
