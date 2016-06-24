@@ -22,7 +22,7 @@ import (
 	log "github.com/Sirupsen/logrus"
 )
 
-var throughBox *ThroughBox = NewThroughBox()
+var throughBox = NewThroughBox()
 
 func init() {
 	log.SetLevel(log.InfoLevel)
@@ -41,13 +41,17 @@ func main() {
 	flag.BoolVar(&hideConsole, "hidecon", false, "Hide console")
 	flag.BoolVar(&showConsole, "showcon", false, "Show console")
 	flag.BoolVar(&debugLog, "debuglog", false, "Show console")
+	flag.Parse()
+	//log.Debugln("Command line: " + flag.CommandLine)
 
 	log.SetOutput(os.Stderr)
 	log.SetLevel(log.DebugLevel)
 
-    if configDir != "" {
-        Locations[LocationConfigFile] = configDir
-    }        
+	log.Debugln("os.Args: ", os.Args)
+	log.Debugln("ConfigDir: ", configDir)
+	if configDir != "" {
+		Locations[LocationConfigFile] = configDir
+	}
 	InitLocations()
 	throughBox.LoadConfig(Locations[LocationConfigFile], true)
 

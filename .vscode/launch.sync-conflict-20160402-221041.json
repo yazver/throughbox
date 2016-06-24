@@ -7,11 +7,11 @@
 			"request": "launch",
 			"mode": "debug",
             //"outDir": "${workspaceRoot}",
-			"program": "${workspaceRoot}\\throughbox\\throughbox.go",
-            //"program": "${workspaceRoot}",
+			//"program": "${workspaceRoot}\\throughbox\\throughbox.go",
+            "program": "${workspaceRoot}",
 			"env": {},
 			//"args": ["-configdir \"d:\\Develop\\Go\\src\\github.com\\yazver\\throughbox\\bin\\config\\config.json\""],
-            "args": ["-configdir=${workspaceRoot}\\bin\\config\\config.json"]
+            "args": ["-configdir \"${workspaceRoot}\\bin\\config\\config.json\""]
 		}
 	]
 }

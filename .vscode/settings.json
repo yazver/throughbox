@@ -3,7 +3,7 @@
     "go.buildOnSave": true,
     "go.lintOnSave": true,
     "go.vetOnSave": true,
-    "go.buildFlags": ["-o ${workspaceRoot}\\bin"],
+    //"go.buildFlags": ["-o ${workspaceRoot}\\bin"],
     "go.lintFlags": [],
     "go.vetFlags": [],
     "go.useCodeSnippetsOnFunctionSuggest": true,
@@ -11,5 +11,7 @@
     "go.formatTool": "gofmt",
     //"go.goroot": "/usr/local/go",
     //"go.gopath": "/Users/lukeh/go"
-    "files.autoSave": "onFocusChange"
+    "files.autoSave": "onFocusChange",
+    "editor.fontSize": 18,
+    "editor.trimAutoWhitespace": true
 }
